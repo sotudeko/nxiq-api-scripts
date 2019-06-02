@@ -5,13 +5,9 @@ class ApplicationPolicyViolations {
 
     static void main(String[] args){
 
-//        def repositoryUrl = args[0]
-//        def applicationName = args[1]
-//        def policyId = args[2]
-
-        def repositoryUrl = 'http://localhost:8070'
-        def applicationName = 'webwolf'
-        def policyId = '8a96e389819449cab1b3d1473fd860f1'
+        def repositoryUrl = args[0]
+        def applicationName = args[1]
+        def policyId = args[2]
 
         def endpoint = repositoryUrl + '/api/v2/policyViolations'
         def query = '?p=' + policyId
@@ -29,21 +25,23 @@ class ApplicationPolicyViolations {
             def jsonSlurper = new JsonSlurper()
             def violationsJsonObject = jsonSlurper.parseText(violationsContent)
 
-            println violationsJsonObject
-
             violationsJsonObject.applicationViolations.each {
 
-                println it
 
                 String currentApplicationName = it.application.name
                 String currentApplicationId = it.application.id
 
-
                 if (currentApplicationName.equals(applicationName)){
-                    // println currentApplicationName + ' (' + currentApplicationId +')'
+
+                    println ''
+                    println 'Application:'
+                    println JsonOutput.prettyPrint(JsonOutput.toJson(it))
 
                     it.policyViolations.each {
-                        // println it.policyName + ' (' + it.policyId +')'
+
+                        println ''
+                        println 'Remediation Details'
+                        println '-------------------'
 
                         String violationScanStage = it.stageId
                         String violationComponentFormat = it.component.componentIdentifier.format
@@ -67,9 +65,9 @@ class ApplicationPolicyViolations {
                             remediationConnection.getOutputStream().write(componentDetails.getBytes("UTF-8"))
 
                             if(remediationConnection.responseCode.equals(200)) {
-                                println(remediationConnection.getInputStream().getText());
+                                def remediationDetails = remediationConnection.getInputStream().getText()
+                                println JsonOutput.prettyPrint(remediationDetails)
                             }
-
                         }
                     }
                 }
